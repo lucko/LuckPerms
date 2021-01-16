@@ -29,18 +29,17 @@ import me.lucko.luckperms.sponge.LPSpongePlugin;
 import me.lucko.luckperms.sponge.model.SpongeUser;
 import me.lucko.luckperms.sponge.service.model.LPSubject;
 import me.lucko.luckperms.sponge.service.model.LPSubjectCollection;
+import me.lucko.luckperms.sponge.service.model.LPSubjectUser;
 
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 
 import java.util.Optional;
-import java.util.UUID;
-import java.util.function.Function;
 
 /**
  * Implements {@link LPSubject} for a {@link SpongeUser}.
  */
-public final class UserSubject extends PermissionHolderSubject<SpongeUser> implements LPSubject {
+public final class UserSubject extends PermissionHolderSubject<SpongeUser> implements LPSubject, LPSubjectUser {
     public UserSubject(LPSpongePlugin plugin, SpongeUser parent) {
         super(plugin, parent);
     }
@@ -56,9 +55,12 @@ public final class UserSubject extends PermissionHolderSubject<SpongeUser> imple
     }
 
     @Override
-    public Optional<CommandSource> getCommandSource() {
-        final UUID uuid = this.parent.getUniqueId();
-        return Sponge.getServer().getPlayer(uuid).map(Function.identity());
+    public Optional<ServerPlayer> resolvePlayer() {
+        if (!Sponge.isServerAvailable()) {
+            return Optional.empty();
+        }
+
+        return Sponge.getServer().getPlayer(this.parent.getUniqueId());
     }
 
     @Override

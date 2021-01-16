@@ -131,7 +131,13 @@ public abstract class ContextManager<S, P extends S> {
         }
     }
 
+    protected S unwrapProxy(S subject) {
+        return subject;
+    }
+
     protected QueryOptions calculate(S subject) {
+        subject = unwrapProxy(subject);
+
         ImmutableContextSet.Builder accumulator = new ImmutableContextSetImpl.BuilderImpl();
         for (ContextCalculator<? super S> calculator : this.calculators) {
             try {

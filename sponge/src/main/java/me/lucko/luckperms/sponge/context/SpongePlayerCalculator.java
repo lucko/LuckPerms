@@ -37,23 +37,23 @@ import net.luckperms.api.context.DefaultContextKeys;
 import net.luckperms.api.context.ImmutableContextSet;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.CatalogTypes;
 import org.spongepowered.api.Game;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.ResourceKey;
+import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.value.ValueContainer;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.Humanoid;
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
-import org.spongepowered.api.event.entity.MoveEntityEvent;
-import org.spongepowered.api.event.entity.living.humanoid.ChangeGameModeEvent;
+import org.spongepowered.api.event.entity.ChangeEntityWorldEvent;
+import org.spongepowered.api.event.entity.living.ChangeGameModeEvent;
 import org.spongepowered.api.service.permission.Subject;
-import org.spongepowered.api.world.DimensionType;
 import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.dimension.DimensionType;
+import org.spongepowered.api.world.server.ServerWorld;
 
 public class SpongePlayerCalculator implements ContextCalculator<Subject> {
     private final LPSpongePlugin plugin;
@@ -64,20 +64,17 @@ public class SpongePlayerCalculator implements ContextCalculator<Subject> {
 
     @Override
     public void calculate(@NonNull Subject subject, @NonNull ContextConsumer consumer) {
-        CommandSource source = subject.getCommandSource().orElse(null);
-        if (source == null) {
-            return;
+        if (subject instanceof Locatable) {
+            World<?> world = ((Locatable) subject).getWorld();
+            consumer.accept(DefaultContextKeys.DIMENSION_TYPE_KEY, getContextKey(world.getDimensionType().getKey()));
+            if (world instanceof ServerWorld) {
+                this.plugin.getConfiguration().get(ConfigKeys.WORLD_REWRITES).rewriteAndSubmit(getContextKey(((ServerWorld) world).getKey()), consumer);
+            }
         }
 
-        if (source instanceof Locatable) {
-            World world = ((Locatable) source).getWorld();
-            consumer.accept(DefaultContextKeys.DIMENSION_TYPE_KEY, getCatalogTypeName(world.getDimension().getType()));
-            this.plugin.getConfiguration().get(ConfigKeys.WORLD_REWRITES).rewriteAndSubmit(world.getName(), consumer);
-        }
-
-        if (source instanceof ValueContainer<?>) {
-            ValueContainer<?> valueContainer = (ValueContainer<?>) source;
-            valueContainer.get(Keys.GAME_MODE).ifPresent(mode -> consumer.accept(DefaultContextKeys.GAMEMODE_KEY, getCatalogTypeName(mode)));
+        if (subject instanceof ValueContainer) {
+            ValueContainer valueContainer = (ValueContainer) subject;
+            valueContainer.get(Keys.GAME_MODE).ifPresent(mode -> consumer.accept(DefaultContextKeys.GAMEMODE_KEY, getContextKey(mode.getKey())));
         }
     }
 
@@ -86,15 +83,15 @@ public class SpongePlayerCalculator implements ContextCalculator<Subject> {
         ImmutableContextSet.Builder builder = new ImmutableContextSetImpl.BuilderImpl();
         Game game = this.plugin.getBootstrap().getGame();
 
-        for (GameMode mode : game.getRegistry().getAllOf(CatalogTypes.GAME_MODE)) {
-            builder.add(DefaultContextKeys.GAMEMODE_KEY, getCatalogTypeName(mode));
+        for (GameMode mode : game.getRegistry().getCatalogRegistry().getAllOf(CatalogTypes.GAME_MODE)) {
+            builder.add(DefaultContextKeys.GAMEMODE_KEY, getContextKey(mode.getKey()));
         }
-        for (DimensionType dim : game.getRegistry().getAllOf(CatalogTypes.DIMENSION_TYPE)) {
-            builder.add(DefaultContextKeys.DIMENSION_TYPE_KEY, getCatalogTypeName(dim));
+        for (DimensionType dim : game.getRegistry().getCatalogRegistry().getAllOf(CatalogTypes.DIMENSION_TYPE)) {
+            builder.add(DefaultContextKeys.DIMENSION_TYPE_KEY, getContextKey(dim.getKey()));
         }
         if (game.isServerAvailable()) {
-            for (World world : game.getServer().getWorlds()) {
-                String worldName = world.getName();
+            for (ServerWorld world : game.getServer().getWorldManager().getWorlds()) {
+                String worldName = getContextKey(world.getKey());
                 if (Context.isValidValue(worldName)) {
                     builder.add(DefaultContextKeys.WORLD_KEY, worldName);
                 }
@@ -104,22 +101,17 @@ public class SpongePlayerCalculator implements ContextCalculator<Subject> {
         return builder.build();
     }
 
-    private static String getCatalogTypeName(CatalogType type) {
-        String id = type.getId();
-        if (id.startsWith("minecraft:")){
-            return id.substring("minecraft:".length());
+    private static String getContextKey(ResourceKey key) {
+        if (key.getNamespace().equals("minecraft")) {
+            return key.getValue();
         }
-        return id;
+        return key.getFormatted();
     }
 
     @Listener(order = Order.LAST)
-    public void onWorldChange(MoveEntityEvent.Teleport e) {
-        Entity targetEntity = e.getTargetEntity();
+    public void onWorldChange(ChangeEntityWorldEvent.Post e) {
+        Entity targetEntity = e.getEntity();
         if (!(targetEntity instanceof Subject)) {
-            return;
-        }
-
-        if (e.getFromTransform().getExtent().equals(e.getToTransform().getExtent())) {
             return;
         }
 
@@ -128,7 +120,7 @@ public class SpongePlayerCalculator implements ContextCalculator<Subject> {
 
     @Listener(order = Order.LAST)
     public void onGameModeChange(ChangeGameModeEvent e) {
-        Humanoid targetEntity = e.getTargetEntity();
+        Humanoid targetEntity = e.getHumanoid();
         if (targetEntity instanceof Subject) {
             this.plugin.getContextManager().signalContextUpdate((Subject) targetEntity);
         }

@@ -25,37 +25,37 @@
 
 package me.lucko.luckperms.sponge;
 
+import me.lucko.luckperms.common.locale.TranslationManager;
 import me.lucko.luckperms.common.sender.Sender;
 import me.lucko.luckperms.common.sender.SenderFactory;
 import me.lucko.luckperms.sponge.service.CompatibilityUtil;
 
-import net.kyori.adventure.platform.spongeapi.SpongeAudiences;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.luckperms.api.util.Tristate;
 
-import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.exception.CommandException;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.service.permission.Subject;
 
+import java.util.Locale;
 import java.util.UUID;
 
-public class SpongeSenderFactory extends SenderFactory<LPSpongePlugin, CommandSource> {
-    private final SpongeAudiences audiences;
-
+public class SpongeSenderFactory extends SenderFactory<LPSpongePlugin, Audience> {
     public SpongeSenderFactory(LPSpongePlugin plugin) {
         super(plugin);
-        this.audiences = SpongeAudiences.create(plugin.getBootstrap().getPluginContainer(), plugin.getBootstrap().getGame());
     }
 
     @Override
-    protected String getName(CommandSource source) {
+    protected String getName(Audience source) {
         if (source instanceof Player) {
-            return source.getName();
+            return ((Player) source).getName();
         }
         return Sender.CONSOLE_NAME;
     }
 
     @Override
-    protected UUID getUniqueId(CommandSource source) {
+    protected UUID getUniqueId(Audience source) {
         if (source instanceof Player) {
             return ((Player) source).getUniqueId();
         }
@@ -63,16 +63,27 @@ public class SpongeSenderFactory extends SenderFactory<LPSpongePlugin, CommandSo
     }
 
     @Override
-    protected void sendMessage(CommandSource source, Component message) {
-        this.audiences.receiver(source).sendMessage(message);
+    protected void sendMessage(Audience source, Component message) {
+        Locale locale = null;
+        if (source instanceof Player) {
+            locale = ((Player) source).getLocale();
+        }
+        Component rendered = TranslationManager.render(message, locale);
+
+        source.sendMessage(rendered);
     }
 
     @Override
-    protected Tristate getPermissionValue(CommandSource source, String node) {
-        Tristate result = CompatibilityUtil.convertTristate(source.getPermissionValue(source.getActiveContexts(), node));
+    protected Tristate getPermissionValue(Audience source, String node) {
+        if (!(source instanceof Subject)) {
+            throw new IllegalStateException("Source is not a subject");
+        }
+
+        final Subject subject = (Subject) source;
+        Tristate result = CompatibilityUtil.convertTristate(subject.getPermissionValue(subject.getActiveContexts(), node));
 
         // check the permdefault
-        if (result == Tristate.UNDEFINED && source.hasPermission(node)) {
+        if (result == Tristate.UNDEFINED && subject.hasPermission(node)) {
             result = Tristate.TRUE;
         }
 
@@ -80,18 +91,25 @@ public class SpongeSenderFactory extends SenderFactory<LPSpongePlugin, CommandSo
     }
 
     @Override
-    protected boolean hasPermission(CommandSource source, String node) {
-        return source.hasPermission(node);
+    protected boolean hasPermission(Audience source, String node) {
+        if (!(source instanceof Subject)) {
+            throw new IllegalStateException("Source is not a subject");
+        }
+
+        final Subject subject = (Subject) source;
+        return subject.hasPermission(node);
     }
 
     @Override
-    protected void performCommand(CommandSource source, String command) {
-        getPlugin().getBootstrap().getGame().getCommandManager().process(source, command);
-    }
+    protected void performCommand(Audience source, String command) {
+        if (!(source instanceof Subject)) {
+            throw new IllegalStateException("Source is not a subject");
+        }
 
-    @Override
-    public void close() {
-        super.close();
-        this.audiences.close();
+        try {
+            getPlugin().getBootstrap().getGame().getCommandManager().process(((Subject) source), source, command);
+        } catch (CommandException e) {
+            // ignore
+        }
     }
 }

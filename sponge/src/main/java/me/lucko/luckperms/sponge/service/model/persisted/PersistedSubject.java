@@ -29,19 +29,15 @@ import me.lucko.luckperms.common.cache.BufferedRequest;
 import me.lucko.luckperms.common.plugin.LuckPermsPlugin;
 import me.lucko.luckperms.sponge.service.LuckPermsService;
 import me.lucko.luckperms.sponge.service.ProxyFactory;
+import me.lucko.luckperms.sponge.service.model.LPProxiedSubject;
 import me.lucko.luckperms.sponge.service.model.LPSubject;
-import me.lucko.luckperms.sponge.service.model.LPSubjectData;
-import me.lucko.luckperms.sponge.service.model.ProxiedSubject;
 import me.lucko.luckperms.sponge.service.model.calculated.CalculatedSubject;
 import me.lucko.luckperms.sponge.service.model.calculated.CalculatedSubjectData;
 import me.lucko.luckperms.sponge.service.model.calculated.MonitoredSubjectData;
 
 import net.luckperms.api.model.data.DataType;
 
-import org.spongepowered.api.command.CommandSource;
-
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -64,7 +60,7 @@ public class PersistedSubject extends CalculatedSubject implements LPSubject {
     private final PersistedSubjectData subjectData;
     private final CalculatedSubjectData transientSubjectData;
 
-    private ProxiedSubject spongeSubject = null;
+    private LPProxiedSubject spongeSubject = null;
 
     /**
      * The save buffer instance for saving changes to disk
@@ -87,7 +83,7 @@ public class PersistedSubject extends CalculatedSubject implements LPSubject {
             protected void onUpdate(boolean success) {
                 super.onUpdate(success);
                 if (success) {
-                    fireUpdateEvent(this);
+                    PersistedSubject.this.service.fireUpdateEvent(this);
                 }
             }
         };
@@ -95,21 +91,12 @@ public class PersistedSubject extends CalculatedSubject implements LPSubject {
             @Override
             protected void onUpdate(boolean success) {
                 if (success) {
-                    fireUpdateEvent(this);
+                    PersistedSubject.this.service.fireUpdateEvent(this);
                 }
             }
         };
 
         this.saveBuffer = new SaveBuffer(service.getPlugin());
-    }
-
-    /**
-     * Calls the subject data update event for the given {@link LPSubjectData} instance.
-     *
-     * @param subjectData the subject data
-     */
-    private void fireUpdateEvent(LPSubjectData subjectData) {
-        this.service.getPlugin().getUpdateEventHandler().fireUpdateEvent(subjectData);
     }
 
     /**
@@ -147,7 +134,7 @@ public class PersistedSubject extends CalculatedSubject implements LPSubject {
     }
 
     @Override
-    public ProxiedSubject sponge() {
+    public LPProxiedSubject sponge() {
         if (this.spongeSubject == null) {
             this.spongeSubject = ProxyFactory.toSponge(this);
         }
@@ -177,11 +164,6 @@ public class PersistedSubject extends CalculatedSubject implements LPSubject {
     @Override
     public CalculatedSubjectData getTransientSubjectData() {
         return this.transientSubjectData;
-    }
-
-    @Override
-    public Optional<CommandSource> getCommandSource() {
-        return Optional.empty();
     }
 
     private final class SaveBuffer extends BufferedRequest<Void> {

@@ -27,16 +27,21 @@ package me.lucko.luckperms.sponge.service;
 
 import me.lucko.luckperms.sponge.service.model.LPPermissionDescription;
 import me.lucko.luckperms.sponge.service.model.LPPermissionService;
+import me.lucko.luckperms.sponge.service.model.LPProxiedSubject;
 import me.lucko.luckperms.sponge.service.model.LPSubject;
 import me.lucko.luckperms.sponge.service.model.LPSubjectCollection;
 import me.lucko.luckperms.sponge.service.model.LPSubjectData;
-import me.lucko.luckperms.sponge.service.model.ProxiedSubject;
+import me.lucko.luckperms.sponge.service.proxy.api8.DescriptionBuilder;
+import me.lucko.luckperms.sponge.service.proxy.api8.PermissionDescriptionProxy;
+import me.lucko.luckperms.sponge.service.proxy.api8.PermissionServiceProxy;
+import me.lucko.luckperms.sponge.service.proxy.api8.SubjectCollectionProxy;
+import me.lucko.luckperms.sponge.service.proxy.api8.SubjectDataProxy;
+import me.lucko.luckperms.sponge.service.proxy.api8.SubjectProxy;
 
 import net.luckperms.api.model.data.DataType;
 
 import org.spongepowered.api.service.permission.PermissionDescription;
 import org.spongepowered.api.service.permission.PermissionService;
-import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.service.permission.SubjectCollection;
 import org.spongepowered.api.service.permission.SubjectData;
 
@@ -46,51 +51,29 @@ import org.spongepowered.api.service.permission.SubjectData;
 public final class ProxyFactory {
     private ProxyFactory() {}
 
-    private static final boolean IS_API_7 = isApi7();
-    private static boolean isApi7() {
-        try {
-            Subject.class.getDeclaredMethod("asSubjectReference");
-            return true;
-        } catch (NoSuchMethodException e) {
-            return false;
-        }
-    }
-
     public static PermissionService toSponge(LPPermissionService luckPerms) {
-        return IS_API_7 ?
-                new me.lucko.luckperms.sponge.service.proxy.api7.PermissionServiceProxy(luckPerms) :
-                new me.lucko.luckperms.sponge.service.proxy.api6.PermissionServiceProxy(luckPerms);
+        return new PermissionServiceProxy(luckPerms);
     }
 
     public static SubjectCollection toSponge(LPSubjectCollection luckPerms) {
-        return IS_API_7 ?
-                new me.lucko.luckperms.sponge.service.proxy.api7.SubjectCollectionProxy(luckPerms) :
-                new me.lucko.luckperms.sponge.service.proxy.api6.SubjectCollectionProxy(luckPerms.getService(), luckPerms);
+        return new SubjectCollectionProxy(luckPerms);
     }
 
-    public static ProxiedSubject toSponge(LPSubject luckPerms) {
-        return IS_API_7 ?
-                new me.lucko.luckperms.sponge.service.proxy.api7.SubjectProxy(luckPerms.getService(), luckPerms.toReference()) :
-                new me.lucko.luckperms.sponge.service.proxy.api6.SubjectProxy(luckPerms.getService(), luckPerms.toReference());
+    public static LPProxiedSubject toSponge(LPSubject luckPerms) {
+        return new SubjectProxy(luckPerms.getService(), luckPerms.toReference());
     }
 
     public static SubjectData toSponge(LPSubjectData luckPerms) {
         LPSubject parentSubject = luckPerms.getParentSubject();
-        return IS_API_7 ?
-                new me.lucko.luckperms.sponge.service.proxy.api7.SubjectDataProxy(parentSubject.getService(), parentSubject.toReference(), luckPerms.getType() == DataType.NORMAL) :
-                new me.lucko.luckperms.sponge.service.proxy.api6.SubjectDataProxy(parentSubject.getService(), parentSubject.toReference(), luckPerms.getType() == DataType.NORMAL);
+        return new SubjectDataProxy(parentSubject.getService(), parentSubject.toReference(), luckPerms.getType() == DataType.NORMAL);
     }
 
     public static PermissionDescription toSponge(LPPermissionDescription luckPerms) {
-        return IS_API_7 ?
-                new me.lucko.luckperms.sponge.service.proxy.api7.PermissionDescriptionProxy(luckPerms.getService(), luckPerms) :
-                new me.lucko.luckperms.sponge.service.proxy.api6.PermissionDescriptionProxy(luckPerms.getService(), luckPerms);
+        return new PermissionDescriptionProxy(luckPerms.getService(), luckPerms);
     }
 
     public static LPPermissionDescription registerDescription(LPPermissionService service, PermissionDescription description) {
-        return IS_API_7 ?
-                me.lucko.luckperms.sponge.service.proxy.api7.DescriptionBuilder.registerDescription(service, description) :
-                me.lucko.luckperms.sponge.service.proxy.api6.DescriptionBuilder.registerDescription(service, description);
+        return DescriptionBuilder.registerDescription(service, description);
     }
 
 }

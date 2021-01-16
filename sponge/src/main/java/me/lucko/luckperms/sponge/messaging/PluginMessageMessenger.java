@@ -34,12 +34,14 @@ import net.luckperms.api.messenger.Messenger;
 import net.luckperms.api.messenger.message.OutgoingMessage;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.spongepowered.api.Platform;
-import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.network.ChannelBinding;
-import org.spongepowered.api.network.ChannelBuf;
-import org.spongepowered.api.network.RawDataListener;
-import org.spongepowered.api.network.RemoteConnection;
+import org.spongepowered.api.ResourceKey;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import org.spongepowered.api.network.EngineConnectionSide;
+import org.spongepowered.api.network.ServerSideConnection;
+import org.spongepowered.api.network.channel.ChannelBuf;
+import org.spongepowered.api.network.channel.raw.RawDataChannel;
+import org.spongepowered.api.network.channel.raw.play.RawPlayDataHandler;
+import org.spongepowered.api.scheduler.Task;
 
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -47,13 +49,13 @@ import java.util.concurrent.TimeUnit;
 /**
  * An implementation of {@link Messenger} using the plugin messaging channels.
  */
-public class PluginMessageMessenger implements Messenger, RawDataListener {
-    private static final String CHANNEL = "luckperms:update";
+public class PluginMessageMessenger implements Messenger, RawPlayDataHandler<ServerSideConnection> {
+    private static final ResourceKey CHANNEL = ResourceKey.of("luckperms", "update");
 
     private final LPSpongePlugin plugin;
     private final IncomingMessageConsumer consumer;
 
-    private ChannelBinding.RawDataChannel channel = null;
+    private RawDataChannel channel = null;
 
     public PluginMessageMessenger(LPSpongePlugin plugin, IncomingMessageConsumer consumer) {
         this.plugin = plugin;
@@ -61,37 +63,43 @@ public class PluginMessageMessenger implements Messenger, RawDataListener {
     }
 
     public void init() {
-        this.channel = this.plugin.getBootstrap().getGame().getChannelRegistrar().createRawChannel(this.plugin.getBootstrap(), CHANNEL);
-        this.channel.addListener(Platform.Type.SERVER, this);
+        this.channel = this.plugin.getBootstrap().getGame().getChannelRegistry().getOfType(CHANNEL, RawDataChannel.class);
+        this.channel.play().addHandler(EngineConnectionSide.SERVER, this);
     }
 
     @Override
     public void close() {
         if (this.channel != null) {
-            this.plugin.getBootstrap().getGame().getChannelRegistrar().unbindChannel(this.channel);
+            this.channel.play().removeHandler(this);
         }
     }
 
     @Override
     public void sendOutgoingMessage(@NonNull OutgoingMessage outgoingMessage) {
-        this.plugin.getBootstrap().getSpongeScheduler().createTaskBuilder().interval(10, TimeUnit.SECONDS).execute(task -> {
-            if (!this.plugin.getBootstrap().getGame().isServerAvailable()) {
-                return;
-            }
+        Task t = Task.builder()
+                .interval(10, TimeUnit.SECONDS)
+                .execute(task -> {
+                    if (!this.plugin.getBootstrap().getGame().isServerAvailable()) {
+                        return;
+                    }
 
-            Collection<Player> players = this.plugin.getBootstrap().getGame().getServer().getOnlinePlayers();
-            Player p = Iterables.getFirst(players, null);
-            if (p == null) {
-                return;
-            }
+                    Collection<ServerPlayer> players = this.plugin.getBootstrap().getGame().getServer().getOnlinePlayers();
+                    ServerPlayer p = Iterables.getFirst(players, null);
+                    if (p == null) {
+                        return;
+                    }
 
-            this.channel.sendTo(p, buf -> buf.writeUTF(outgoingMessage.asEncodedString()));
-            task.cancel();
-        }).submit(this.plugin.getBootstrap());
+                    this.channel.play().sendTo(p, buf -> buf.writeUTF(outgoingMessage.asEncodedString()));
+                    task.cancel();
+                })
+                .plugin(this.plugin.getBootstrap().getPluginContainer())
+                .build();
+
+        this.plugin.getBootstrap().getScheduler().getSyncScheduler().submit(t);
     }
 
     @Override
-    public void handlePayload(@NonNull ChannelBuf buf, @NonNull RemoteConnection connection, Platform.@NonNull Type type) {
+    public void handlePayload(ChannelBuf buf, ServerSideConnection connection) {
         String msg = buf.readUTF();
         this.consumer.consumeIncomingMessageAsString(msg);
     }

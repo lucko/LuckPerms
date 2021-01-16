@@ -88,13 +88,13 @@ public enum Dependency {
             "4phi0TxNKVj5Lko63nlkrd5snIJcaU+cXUfAWsbCX1U=",
             Relocation.of("adventure", "net{}kyori{}adventure")
     ),
-    ADVENTURE_PLATFORM_SPONGEAPI(
-            "me{}lucko",
-            "adventure-platform-spongeapi",
-            "4.0.1",
-            "6fjWuZMeJ6633RKuZh6sIlMyVIzryQoewONeei2nB+4=",
-            Relocation.of("adventure", "net{}kyori{}adventure")
-    ),
+    //ADVENTURE_PLATFORM_SPONGEAPI(
+    //        "me{}lucko",
+    //        "adventure-platform-spongeapi",
+    //        "4.0.1",
+    //        "6fjWuZMeJ6633RKuZh6sIlMyVIzryQoewONeei2nB+4=",
+    //        Relocation.of("adventure", "net{}kyori{}adventure")
+    //),
     EVENT(
             "net{}kyori",
             "event-api",

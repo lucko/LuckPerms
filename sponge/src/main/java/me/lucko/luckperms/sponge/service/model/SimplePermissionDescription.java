@@ -27,10 +27,11 @@ package me.lucko.luckperms.sponge.service.model;
 
 import me.lucko.luckperms.sponge.service.ProxyFactory;
 
+import net.kyori.adventure.text.Component;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.service.permission.PermissionDescription;
-import org.spongepowered.api.text.Text;
+import org.spongepowered.plugin.PluginContainer;
 
 import java.util.Map;
 import java.util.Objects;
@@ -41,12 +42,12 @@ public final class SimplePermissionDescription implements LPPermissionDescriptio
     private final LPPermissionService service;
 
     private final String id;
-    private final @Nullable Text description;
+    private final @Nullable Component description;
     private final @Nullable PluginContainer owner;
 
     private PermissionDescription spongeProxy = null;
 
-    public SimplePermissionDescription(LPPermissionService service, String id, @Nullable Text description, @Nullable PluginContainer owner) {
+    public SimplePermissionDescription(LPPermissionService service, String id, @Nullable Component description, @Nullable PluginContainer owner) {
         this.service = service;
         this.id = Objects.requireNonNull(id, "id");
         this.description = description;
@@ -72,7 +73,7 @@ public final class SimplePermissionDescription implements LPPermissionDescriptio
     }
 
     @Override
-    public Optional<Text> getDescription() {
+    public Optional<Component> getDescription() {
         return Optional.ofNullable(this.description);
     }
 

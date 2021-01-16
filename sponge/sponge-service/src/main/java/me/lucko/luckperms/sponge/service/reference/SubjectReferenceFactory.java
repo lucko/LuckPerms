@@ -30,9 +30,9 @@ import com.google.common.base.Splitter;
 
 import me.lucko.luckperms.common.util.CaffeineFactory;
 import me.lucko.luckperms.sponge.service.model.LPPermissionService;
+import me.lucko.luckperms.sponge.service.model.LPProxiedSubject;
 import me.lucko.luckperms.sponge.service.model.LPSubject;
 import me.lucko.luckperms.sponge.service.model.LPSubjectReference;
-import me.lucko.luckperms.sponge.service.model.ProxiedSubject;
 
 import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.service.permission.SubjectReference;
@@ -85,8 +85,8 @@ public final class SubjectReferenceFactory {
 
     public LPSubjectReference obtain(Subject subject) {
         Objects.requireNonNull(subject, "subject");
-        if (subject instanceof ProxiedSubject) {
-            return ((ProxiedSubject) subject).asSubjectReference();
+        if (subject instanceof LPProxiedSubject) {
+            return ((LPProxiedSubject) subject).asSubjectReference();
         }
 
         return obtain(subject.getContainingCollection().getIdentifier(), subject.getIdentifier());

@@ -30,8 +30,6 @@ import me.lucko.luckperms.sponge.model.SpongeGroup;
 import me.lucko.luckperms.sponge.service.model.LPSubject;
 import me.lucko.luckperms.sponge.service.model.LPSubjectCollection;
 
-import org.spongepowered.api.command.CommandSource;
-
 import java.util.Optional;
 
 /**
@@ -50,11 +48,6 @@ public class GroupSubject extends PermissionHolderSubject<SpongeGroup> implement
     @Override
     public Optional<String> getFriendlyIdentifier() {
         return this.parent.getDisplayName();
-    }
-
-    @Override
-    public Optional<CommandSource> getCommandSource() {
-        return Optional.empty();
     }
 
     @Override

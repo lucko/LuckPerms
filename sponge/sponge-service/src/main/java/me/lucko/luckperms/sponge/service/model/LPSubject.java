@@ -31,7 +31,6 @@ import net.luckperms.api.context.ImmutableContextSet;
 import net.luckperms.api.query.QueryOptions;
 import net.luckperms.api.util.Tristate;
 
-import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.service.permission.Subject;
 
 import java.util.Optional;
@@ -41,7 +40,7 @@ import java.util.Optional;
  */
 public interface LPSubject {
 
-    ProxiedSubject sponge();
+    LPProxiedSubject sponge();
 
     LPPermissionService getService();
 
@@ -54,10 +53,6 @@ public interface LPSubject {
     LPSubject getDefaults();
 
     default Optional<String> getFriendlyIdentifier() {
-        return Optional.empty();
-    }
-
-    default Optional<CommandSource> getCommandSource() {
         return Optional.empty();
     }
 

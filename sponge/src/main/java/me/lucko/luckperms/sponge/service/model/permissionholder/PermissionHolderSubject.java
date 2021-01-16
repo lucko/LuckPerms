@@ -41,9 +41,9 @@ import me.lucko.luckperms.sponge.LPSpongePlugin;
 import me.lucko.luckperms.sponge.model.SpongeGroup;
 import me.lucko.luckperms.sponge.service.LuckPermsService;
 import me.lucko.luckperms.sponge.service.ProxyFactory;
+import me.lucko.luckperms.sponge.service.model.LPProxiedSubject;
 import me.lucko.luckperms.sponge.service.model.LPSubject;
 import me.lucko.luckperms.sponge.service.model.LPSubjectReference;
-import me.lucko.luckperms.sponge.service.model.ProxiedSubject;
 
 import net.luckperms.api.context.ImmutableContextSet;
 import net.luckperms.api.model.data.DataType;
@@ -64,7 +64,7 @@ public abstract class PermissionHolderSubject<T extends PermissionHolder> implem
     private final PermissionHolderSubjectData subjectData;
     private final PermissionHolderSubjectData transientSubjectData;
 
-    private ProxiedSubject spongeSubject = null;
+    private LPProxiedSubject spongeSubject = null;
 
     PermissionHolderSubject(LPSpongePlugin plugin, T parent) {
         this.parent = parent;
@@ -74,8 +74,8 @@ public abstract class PermissionHolderSubject<T extends PermissionHolder> implem
     }
 
     public void fireUpdateEvent() {
-        this.plugin.getUpdateEventHandler().fireUpdateEvent(this.subjectData);
-        this.plugin.getUpdateEventHandler().fireUpdateEvent(this.transientSubjectData);
+        this.plugin.getService().fireUpdateEvent(this.subjectData);
+        this.plugin.getService().fireUpdateEvent(this.transientSubjectData);
     }
 
     public T getParent() {
@@ -83,7 +83,7 @@ public abstract class PermissionHolderSubject<T extends PermissionHolder> implem
     }
 
     @Override
-    public synchronized ProxiedSubject sponge() {
+    public synchronized LPProxiedSubject sponge() {
         if (this.spongeSubject == null) {
             this.spongeSubject = ProxyFactory.toSponge(this);
         }

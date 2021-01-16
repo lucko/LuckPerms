@@ -29,15 +29,11 @@ import me.lucko.luckperms.common.api.LuckPermsApiProvider;
 import me.lucko.luckperms.common.event.AbstractEventBus;
 
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.plugin.PluginContainer;
+import org.spongepowered.plugin.PluginContainer;
 
 public class SpongeEventBus extends AbstractEventBus<PluginContainer> {
     public SpongeEventBus(LPSpongePlugin plugin, LuckPermsApiProvider apiProvider) {
         super(plugin, apiProvider);
-
-        // register listener
-        LPSpongeBootstrap bootstrap = plugin.getBootstrap();
-        bootstrap.getGame().getEventManager().registerListeners(bootstrap, this);
     }
 
     @Override

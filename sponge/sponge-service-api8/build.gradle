@@ -4,6 +4,7 @@ repositories {
 
 dependencies {
     compile project(':common')
+    compile project(':sponge:sponge-service')
 
     compileOnly('org.spongepowered:spongeapi:8.0.0-SNAPSHOT') {
         exclude(module: 'configurate-core')
@@ -11,6 +12,4 @@ dependencies {
         exclude(module: 'configurate-gson')
         exclude(module: 'configurate-yaml')
     }
-    compileOnly 'com.google.guava:guava:21.0'
 }
-

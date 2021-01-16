@@ -4,14 +4,13 @@ plugins {
 }
 
 repositories {
-    maven { url 'https://repo.spongepowered.org/maven' }
+    maven { url 'https://repo-new.spongepowered.org/repository/maven-public/' }
 }
 
 dependencies {
     compile project(':common')
     compile project(':sponge:sponge-service')
-    compile project(':sponge:sponge-service-api6')
-    compile project(':sponge:sponge-service-api7')
+    compile project(':sponge:sponge-service-api8')
 
     compileOnly('org.spongepowered:spongeapi:8.0.0-SNAPSHOT') {
         exclude(module: 'configurate-core')
@@ -28,9 +27,11 @@ dependencies {
     compileOnly 'me.lucko:adventure-platform-spongeapi:4.0.0' // re: this artifact - see note in common/build.gradle
 }
 
-blossom {
-    replaceTokenIn('src/main/java/me/lucko/luckperms/sponge/LPSpongeBootstrap.java')
-    replaceToken '@version@', project.ext.fullVersion
+processResources {
+    from(sourceSets.main.resources.srcDirs) {
+        expand 'pluginVersion': project.ext.fullVersion
+        include 'META-INF/plugins.json'
+    }
 }
 
 shadowJar {
@@ -41,7 +42,7 @@ shadowJar {
         include(dependency('me.lucko.luckperms:.*'))
     }
 
-    relocate 'net.kyori.adventure', 'me.lucko.luckperms.lib.adventure'
+    //relocate 'net.kyori.adventure', 'me.lucko.luckperms.lib.adventure'
     relocate 'net.kyori.event', 'me.lucko.luckperms.lib.eventbus'
     relocate 'com.github.benmanes.caffeine', 'me.lucko.luckperms.lib.caffeine'
     relocate 'okio', 'me.lucko.luckperms.lib.okio'
@@ -62,13 +63,3 @@ shadowJar {
 artifacts {
     archives shadowJar
 }
-
-// Only used occasionally for deployment - not needed for normal builds.
-/*
-apply plugin: 'signing'
-
-signing {
-    useGpgCmd()
-    sign configurations.archives
-}
-*/

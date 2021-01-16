@@ -142,7 +142,7 @@ public final class AbstractSender<T> implements Sender {
     // A small utility method which splits components built using
     // > join(newLine(), components...)
     // back into separate components.
-    private static Iterable<Component> splitNewlines(Component message) {
+    public static Iterable<Component> splitNewlines(Component message) {
         if (message instanceof TextComponent && message.style().isEmpty() && !message.children().isEmpty() && ((TextComponent) message).content().isEmpty()) {
             LinkedList<List<Component>> split = new LinkedList<>();
             split.add(new ArrayList<>());

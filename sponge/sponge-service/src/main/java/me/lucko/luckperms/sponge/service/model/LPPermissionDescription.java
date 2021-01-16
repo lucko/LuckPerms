@@ -25,9 +25,10 @@
 
 package me.lucko.luckperms.sponge.service.model;
 
-import org.spongepowered.api.plugin.PluginContainer;
+import net.kyori.adventure.text.Component;
+
 import org.spongepowered.api.service.permission.PermissionDescription;
-import org.spongepowered.api.text.Text;
+import org.spongepowered.plugin.PluginContainer;
 
 import java.util.Map;
 import java.util.Optional;
@@ -44,7 +45,7 @@ public interface LPPermissionDescription {
 
     String getId();
 
-    Optional<Text> getDescription();
+    Optional<Component> getDescription();
 
     Optional<PluginContainer> getOwner();
 

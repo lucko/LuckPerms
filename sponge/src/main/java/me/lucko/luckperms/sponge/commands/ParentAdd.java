@@ -40,8 +40,6 @@ import me.lucko.luckperms.sponge.service.model.LPSubjectData;
 
 import net.luckperms.api.context.ImmutableContextSet;
 
-import org.spongepowered.api.Sponge;
-
 public class ParentAdd extends ChildCommand<LPSubjectData> {
     public ParentAdd() {
         super(CommandSpec.SPONGE_PARENT_ADD, "add", CommandPermission.SPONGE_PARENT_ADD, Predicates.inRange(0, 1));
@@ -53,7 +51,7 @@ public class ParentAdd extends ChildCommand<LPSubjectData> {
         String name = args.get(1);
         ImmutableContextSet contextSet = args.getContextOrEmpty(2);
 
-        LPPermissionService service = Sponge.getServiceManager().provideUnchecked(LPPermissionService.class);
+        LPPermissionService service = subjectData.getParentSubject().getService();
         if (service.getLoadedCollections().keySet().stream().map(String::toLowerCase).noneMatch(s -> s.equalsIgnoreCase(collection))) {
             SpongeCommandUtils.sendPrefixed(sender, "Warning: SubjectCollection '&4" + collection + "&c' doesn't already exist.");
         }

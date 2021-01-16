@@ -23,29 +23,11 @@
  *  SOFTWARE.
  */
 
-package me.lucko.luckperms.sponge.listeners;
+package me.lucko.luckperms.sponge.service.model;
 
-import me.lucko.luckperms.common.locale.Message;
-import me.lucko.luckperms.sponge.LPSpongePlugin;
+/**
+ * Marks that an object is a proxy implementation for a PermissionService related class.
+ */
+public interface LPProxiedServiceObject {
 
-import org.spongepowered.api.command.CommandCause;
-import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.command.ExecuteCommandEvent;
-
-public class SpongePlatformListener {
-    private final LPSpongePlugin plugin;
-
-    public SpongePlatformListener(LPSpongePlugin plugin) {
-        this.plugin = plugin;
-    }
-
-    @Listener
-    public void onSendCommand(ExecuteCommandEvent e) {
-        CommandCause source = e.getCommandCause();
-
-        final String name = e.getCommand().toLowerCase();
-        if (((name.equals("op") || name.equals("minecraft:op")) && source.hasPermission("minecraft.command.op")) || ((name.equals("deop") || name.equals("minecraft:deop")) && source.hasPermission("minecraft.command.deop"))) {
-            Message.OP_DISABLED_SPONGE.send(this.plugin.getSenderFactory().wrap(source.getAudience()));
-        }
-    }
 }

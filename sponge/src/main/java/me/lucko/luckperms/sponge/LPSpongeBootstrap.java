@@ -28,32 +28,29 @@ package me.lucko.luckperms.sponge;
 import com.google.inject.Inject;
 
 import me.lucko.luckperms.common.dependencies.classloader.PluginClassLoader;
-import me.lucko.luckperms.common.dependencies.classloader.ReflectionClassLoader;
 import me.lucko.luckperms.common.plugin.bootstrap.LuckPermsBootstrap;
+import me.lucko.luckperms.common.plugin.logging.Log4jPluginLogger;
 import me.lucko.luckperms.common.plugin.logging.PluginLogger;
-import me.lucko.luckperms.common.plugin.logging.Slf4jPluginLogger;
-import me.lucko.luckperms.common.plugin.scheduler.SchedulerAdapter;
 import me.lucko.luckperms.common.util.MoreFiles;
+import me.lucko.luckperms.sponge.util.SpongeClassLoader;
 
-import org.slf4j.Logger;
+import net.luckperms.api.platform.Platform;
+
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.api.Game;
-import org.spongepowered.api.Platform;
+import org.spongepowered.api.Platform.Component;
 import org.spongepowered.api.Server;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
-import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
-import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
-import org.spongepowered.api.plugin.Dependency;
-import org.spongepowered.api.plugin.Plugin;
-import org.spongepowered.api.plugin.PluginContainer;
+import org.spongepowered.api.event.lifecycle.ConstructPluginEvent;
+import org.spongepowered.api.event.lifecycle.StoppingEngineEvent;
 import org.spongepowered.api.profile.GameProfile;
-import org.spongepowered.api.scheduler.AsynchronousExecutor;
-import org.spongepowered.api.scheduler.Scheduler;
-import org.spongepowered.api.scheduler.SpongeExecutorService;
-import org.spongepowered.api.scheduler.SynchronousExecutor;
+import org.spongepowered.plugin.PluginContainer;
+import org.spongepowered.plugin.jvm.Plugin;
+import org.spongepowered.plugin.metadata.PluginMetadata;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,18 +67,7 @@ import java.util.concurrent.CountDownLatch;
 /**
  * Bootstrap plugin for LuckPerms running on Sponge.
  */
-@Plugin(
-        id = "luckperms",
-        name = "LuckPerms",
-        version = "@version@",
-        authors = "Luck",
-        description = "A permissions plugin",
-        url = "https://luckperms.net",
-        dependencies = {
-                // explicit dependency on spongeapi with no defined API version
-                @Dependency(id = "spongeapi")
-        }
-)
+@Plugin("luckperms")
 public class LPSpongeBootstrap implements LuckPermsBootstrap {
 
     /**
@@ -92,7 +78,7 @@ public class LPSpongeBootstrap implements LuckPermsBootstrap {
     /**
      * A scheduler adapter for the platform
      */
-    private final SchedulerAdapter schedulerAdapter;
+    private final SpongeSchedulerAdapter schedulerAdapter;
 
     /**
      * The plugin classloader
@@ -116,33 +102,27 @@ public class LPSpongeBootstrap implements LuckPermsBootstrap {
     /**
      * Reference to the central {@link Game} instance in the API
      */
-    @Inject
-    private Game game;
-
-    /**
-     * Reference to the sponge scheduler
-     */
-    private final Scheduler spongeScheduler;
-
-    /**
-     * Injected configuration directory for the plugin
-     */
-    @Inject
-    @ConfigDir(sharedRoot = false)
-    private Path configDirectory;
+    private final Game game;
 
     /**
      * Injected plugin container for the plugin
      */
-    @Inject
-    private PluginContainer pluginContainer;
+    private final PluginContainer pluginContainer;
+
+    /**
+     * Injected configuration directory for the plugin
+     */
+    private final Path configDirectory;
 
     @Inject
-    public LPSpongeBootstrap(Logger logger, @SynchronousExecutor SpongeExecutorService syncExecutor, @AsynchronousExecutor SpongeExecutorService asyncExecutor) {
-        this.logger = new Slf4jPluginLogger(logger);
-        this.spongeScheduler = Sponge.getScheduler();
-        this.schedulerAdapter = new SpongeSchedulerAdapter(this, this.spongeScheduler, syncExecutor, asyncExecutor);
-        this.classLoader = new ReflectionClassLoader(this);
+    public LPSpongeBootstrap(Logger logger, Game game, PluginContainer pluginContainer, @ConfigDir(sharedRoot = false) Path configDirectory) {
+        this.logger = new Log4jPluginLogger(logger);
+        this.game = game;
+        this.pluginContainer = pluginContainer;
+        this.configDirectory = configDirectory;
+
+        this.schedulerAdapter = new SpongeSchedulerAdapter(this.game, this.pluginContainer);
+        this.classLoader = new SpongeClassLoader(this);
         this.plugin = new LPSpongePlugin(this);
     }
 
@@ -154,7 +134,7 @@ public class LPSpongeBootstrap implements LuckPermsBootstrap {
     }
 
     @Override
-    public SchedulerAdapter getScheduler() {
+    public SpongeSchedulerAdapter getScheduler() {
         return this.schedulerAdapter;
     }
 
@@ -164,9 +144,8 @@ public class LPSpongeBootstrap implements LuckPermsBootstrap {
     }
 
     // lifecycle
-
     @Listener(order = Order.FIRST)
-    public void onEnable(GamePreInitializationEvent event) {
+    public void onEnable(ConstructPluginEvent event) {
         this.startTime = Instant.now();
         try {
             this.plugin.load();
@@ -181,13 +160,8 @@ public class LPSpongeBootstrap implements LuckPermsBootstrap {
         }
     }
 
-    @Listener(order = Order.LATE)
-    public void onLateEnable(GamePreInitializationEvent event) {
-        this.plugin.lateEnable();
-    }
-
     @Listener
-    public void onDisable(GameStoppingServerEvent event) {
+    public void onDisable(StoppingEngineEvent<Server> event) {
         this.plugin.disable();
     }
 
@@ -211,19 +185,19 @@ public class LPSpongeBootstrap implements LuckPermsBootstrap {
         return this.game.isServerAvailable() ? Optional.of(this.game.getServer()) : Optional.empty();
     }
 
-    public Scheduler getSpongeScheduler() {
-        return this.spongeScheduler;
-    }
-
     public PluginContainer getPluginContainer() {
         return this.pluginContainer;
+    }
+
+    public void registerListeners(Object obj) {
+        this.game.getEventManager().registerListeners(this.pluginContainer, obj);
     }
 
     // provide information about the plugin
 
     @Override
     public String getVersion() {
-        return "@version@";
+        return this.pluginContainer.getMetadata().getVersion();
     }
 
     @Override
@@ -234,20 +208,21 @@ public class LPSpongeBootstrap implements LuckPermsBootstrap {
     // provide information about the platform
 
     @Override
-    public net.luckperms.api.platform.Platform.Type getType() {
-        return net.luckperms.api.platform.Platform.Type.SPONGE;
+    public Platform.Type getType() {
+        return Platform.Type.SPONGE;
     }
 
     @Override
     public String getServerBrand() {
-        return this.game.getPlatform().getContainer(Platform.Component.IMPLEMENTATION).getName();
+        PluginMetadata brandMetadata = this.game.getPlatform().getContainer(Component.IMPLEMENTATION).getMetadata();
+        return brandMetadata.getName().orElseGet(brandMetadata::getId);
     }
 
     @Override
     public String getServerVersion() {
-        PluginContainer api = this.game.getPlatform().getContainer(Platform.Component.API);
-        PluginContainer impl = this.game.getPlatform().getContainer(Platform.Component.IMPLEMENTATION);
-        return api.getName() + ": " + api.getVersion().orElse("null") + " - " + impl.getName() + ": " + impl.getVersion().orElse("null");
+        PluginMetadata api = this.game.getPlatform().getContainer(Component.API).getMetadata();
+        PluginMetadata impl = this.game.getPlatform().getContainer(Component.IMPLEMENTATION).getMetadata();
+        return api.getName() + ": " + api.getVersion() + " - " + impl.getName() + ": " + impl.getVersion();
     }
     
     @Override
@@ -272,13 +247,13 @@ public class LPSpongeBootstrap implements LuckPermsBootstrap {
     }
 
     @Override
-    public Optional<Player> getPlayer(UUID uniqueId) {
+    public Optional<ServerPlayer> getPlayer(UUID uniqueId) {
         return getServer().flatMap(s -> s.getPlayer(uniqueId));
     }
 
     @Override
     public Optional<UUID> lookupUniqueId(String username) {
-        return getServer().flatMap(server -> server.getGameProfileManager().get(username)
+        return getServer().flatMap(server -> server.getGameProfileManager().getBasicProfile(username)
                 .thenApply(p -> Optional.of(p.getUniqueId()))
                 .exceptionally(x -> Optional.empty())
                 .join()
@@ -287,7 +262,7 @@ public class LPSpongeBootstrap implements LuckPermsBootstrap {
 
     @Override
     public Optional<String> lookupUsername(UUID uniqueId) {
-        return getServer().flatMap(server -> server.getGameProfileManager().get(uniqueId)
+        return getServer().flatMap(server -> server.getGameProfileManager().getBasicProfile(uniqueId)
                 .thenApply(GameProfile::getName)
                 .exceptionally(x -> Optional.empty())
                 .join()
@@ -302,7 +277,7 @@ public class LPSpongeBootstrap implements LuckPermsBootstrap {
     @Override
     public Collection<String> getPlayerList() {
         return getServer().map(server -> {
-            Collection<Player> players = server.getOnlinePlayers();
+            Collection<ServerPlayer> players = server.getOnlinePlayers();
             List<String> list = new ArrayList<>(players.size());
             for (Player player : players) {
                 list.add(player.getName());
@@ -314,7 +289,7 @@ public class LPSpongeBootstrap implements LuckPermsBootstrap {
     @Override
     public Collection<UUID> getOnlinePlayers() {
         return getServer().map(server -> {
-            Collection<Player> players = server.getOnlinePlayers();
+            Collection<ServerPlayer> players = server.getOnlinePlayers();
             List<UUID> list = new ArrayList<>(players.size());
             for (Player player : players) {
                 list.add(player.getUniqueId());
@@ -325,7 +300,7 @@ public class LPSpongeBootstrap implements LuckPermsBootstrap {
 
     @Override
     public boolean isPlayerOnline(UUID uniqueId) {
-        return getServer().flatMap(server -> server.getPlayer(uniqueId).map(Player::isOnline)).orElse(false);
+        return getServer().map(server -> server.getPlayer(uniqueId).isPresent()).orElse(false);
     }
     
 }

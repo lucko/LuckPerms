@@ -32,28 +32,50 @@ import me.lucko.luckperms.common.context.QueryOptionsCache;
 import me.lucko.luckperms.common.context.QueryOptionsSupplier;
 import me.lucko.luckperms.common.util.CaffeineFactory;
 import me.lucko.luckperms.sponge.LPSpongePlugin;
+import me.lucko.luckperms.sponge.service.model.LPProxiedSubject;
+import me.lucko.luckperms.sponge.service.model.LPSubject;
+import me.lucko.luckperms.sponge.service.model.LPSubjectReference;
+import me.lucko.luckperms.sponge.service.model.LPSubjectUser;
 
 import net.luckperms.api.context.ImmutableContextSet;
 import net.luckperms.api.query.QueryOptions;
 
-import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import org.spongepowered.api.service.permission.PermissionService;
 import org.spongepowered.api.service.permission.Subject;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-public class SpongeContextManager extends ContextManager<Subject, Player> {
+public class SpongeContextManager extends ContextManager<Subject, ServerPlayer> {
 
     private final LoadingCache<Subject, QueryOptionsCache<Subject>> subjectCaches = CaffeineFactory.newBuilder()
             .expireAfterAccess(1, TimeUnit.MINUTES)
             .build(key -> new QueryOptionsCache<>(key, this));
 
     public SpongeContextManager(LPSpongePlugin plugin) {
-        super(plugin, Subject.class, Player.class);
+        super(plugin, Subject.class, ServerPlayer.class);
     }
 
     @Override
-    public UUID getUniqueId(Player player) {
+    protected Subject unwrapProxy(Subject subject) {
+        if (subject instanceof LPProxiedSubject) {
+            LPSubjectReference ref = ((LPProxiedSubject) subject).asSubjectReference();
+            if (ref.getCollectionIdentifier().equals(PermissionService.SUBJECTS_USER)) {
+                LPSubject lpSubject = ref.resolveLp().join();
+                if (lpSubject instanceof LPSubjectUser) {
+                    ServerPlayer player = ((LPSubjectUser) lpSubject).resolvePlayer().orElse(null);
+                    if (player != null) {
+                        return player;
+                    }
+                }
+            }
+        }
+        return subject;
+    }
+
+    @Override
+    public UUID getUniqueId(ServerPlayer player) {
         return player.getUniqueId();
     }
 

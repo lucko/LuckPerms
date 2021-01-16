@@ -1,0 +1,21 @@
+{
+  "plugins": [
+    {
+      "loader": "java_plain",
+      "id": "luckperms",
+      "name": "LuckPerms",
+      "version": "${pluginVersion}",
+      "main-class": "me.lucko.luckperms.sponge.LPSpongeBootstrap",
+      "description": "A permissions plugin",
+      "links": {
+        "homepage": "https://luckperms.net"
+      },
+      "contributors": [
+        {"name": "Luck", "description": "author"}
+      ],
+      "dependencies": [
+        {"id": "spongeapi", "version": "8.0.0"}
+      ]
+    }
+  ]
+}

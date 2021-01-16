@@ -30,23 +30,21 @@ import me.lucko.luckperms.common.command.utils.ArgumentTokenizer;
 import me.lucko.luckperms.common.config.ConfigKeys;
 import me.lucko.luckperms.common.sender.Sender;
 
+import net.kyori.adventure.text.Component;
+
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.spongepowered.api.command.CommandCallable;
+import org.spongepowered.api.command.Command;
+import org.spongepowered.api.command.CommandCause;
 import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.selector.Selector;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.selector.Selector;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
 
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class SpongeCommandExecutor extends CommandManager implements CommandCallable {
+public class SpongeCommandExecutor extends CommandManager implements Command.Raw {
     private final LPSpongePlugin plugin;
 
     public SpongeCommandExecutor(LPSpongePlugin plugin) {
@@ -55,41 +53,41 @@ public class SpongeCommandExecutor extends CommandManager implements CommandCall
     }
 
     @Override
-    public @NonNull CommandResult process(@NonNull CommandSource source, @NonNull String args) {
-        Sender wrapped = this.plugin.getSenderFactory().wrap(source);
+    public @NonNull CommandResult process(@NonNull CommandCause source, @NonNull String args) {
+        Sender wrapped = this.plugin.getSenderFactory().wrap(source.getAudience());
         List<String> arguments = resolveSelectors(source, ArgumentTokenizer.EXECUTE.tokenizeInput(args));
         executeCommand(wrapped, "lp", arguments);
         return CommandResult.success();
     }
 
     @Override
-    public @NonNull List<String> getSuggestions(@NonNull CommandSource source, @NonNull String args, @Nullable Location<World> location) {
-        Sender wrapped = this.plugin.getSenderFactory().wrap(source);
+    public @NonNull List<String> getSuggestions(@NonNull CommandCause source, @NonNull String args) {
+        Sender wrapped = this.plugin.getSenderFactory().wrap(source.getAudience());
         List<String> arguments = resolveSelectors(source, ArgumentTokenizer.TAB_COMPLETE.tokenizeInput(args));
         return tabCompleteCommand(wrapped, arguments);
     }
 
     @Override
-    public boolean testPermission(@NonNull CommandSource source) {
+    public boolean canExecute(CommandCause cause) {
         return true; // we run permission checks internally
     }
 
     @Override
-    public @NonNull Optional<Text> getShortDescription(@NonNull CommandSource source) {
-        return Optional.of(Text.of("Manage permissions"));
+    public Optional<Component> getShortDescription(CommandCause cause) {
+        return Optional.of(Component.text("Manage permissions"));
     }
 
     @Override
-    public @NonNull Optional<Text> getHelp(@NonNull CommandSource source) {
-        return Optional.of(Text.of("Run /luckperms to view usage."));
+    public Optional<Component> getExtendedDescription(CommandCause cause) {
+        return Optional.empty();
     }
 
     @Override
-    public @NonNull Text getUsage(@NonNull CommandSource source) {
-        return Text.of("/luckperms");
+    public Component getUsage(CommandCause cause) {
+        return Component.text("/luckperms");
     }
 
-    private List<String> resolveSelectors(CommandSource source, List<String> args) {
+    private List<String> resolveSelectors(CommandCause source, List<String> args) {
         if (!this.plugin.getConfiguration().get(ConfigKeys.RESOLVE_COMMAND_SELECTORS)) {
             return args;
         }
@@ -102,7 +100,7 @@ public class SpongeCommandExecutor extends CommandManager implements CommandCall
 
             List<Player> matchedPlayers;
             try {
-                matchedPlayers = Selector.parse(arg).resolve(source).stream()
+                matchedPlayers = Selector.parse(arg).select(source).stream()
                         .filter(e -> e instanceof Player)
                         .map(e -> ((Player) e))
                         .collect(Collectors.toList());

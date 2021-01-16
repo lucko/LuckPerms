@@ -32,13 +32,10 @@ import me.lucko.luckperms.common.model.User;
 import me.lucko.luckperms.common.plugin.util.AbstractConnectionListener;
 import me.lucko.luckperms.sponge.LPSpongePlugin;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.spongeapi.SpongeComponentSerializer;
-
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.filter.IsCancelled;
-import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.event.network.ServerSideConnectionEvent;
 import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.util.Tristate;
 
@@ -60,7 +57,7 @@ public class SpongeConnectionListener extends AbstractConnectionListener {
 
     @Listener(order = Order.EARLY)
     @IsCancelled(Tristate.UNDEFINED)
-    public void onClientAuth(ClientConnectionEvent.Auth e) {
+    public void onClientAuth(ServerSideConnectionEvent.Auth e) {
         /* Called when the player first attempts a connection with the server.
            Listening on AFTER_PRE priority to allow plugins to modify username / UUID data here. (auth plugins)
            Also, give other plugins a chance to cancel the event. */
@@ -98,16 +95,14 @@ public class SpongeConnectionListener extends AbstractConnectionListener {
             this.deniedAsyncLogin.add(profile.getUniqueId());
 
             e.setCancelled(true);
-            e.setMessageCancelled(false);
-            Component reason = TranslationManager.render(Message.LOADING_DATABASE_ERROR.build());
-            e.setMessage(SpongeComponentSerializer.get().serialize(reason));
+            e.setMessage(TranslationManager.render(Message.LOADING_DATABASE_ERROR.build()));
             this.plugin.getEventDispatcher().dispatchPlayerLoginProcess(profile.getUniqueId(), username, null);
         }
     }
 
     @Listener(order = Order.LAST)
     @IsCancelled(Tristate.UNDEFINED)
-    public void onClientAuthMonitor(ClientConnectionEvent.Auth e) {
+    public void onClientAuthMonitor(ServerSideConnectionEvent.Auth e) {
         /* Listen to see if the event was cancelled after we initially handled the connection
            If the connection was cancelled here, we need to do something to clean up the data that was loaded. */
 
@@ -124,7 +119,7 @@ public class SpongeConnectionListener extends AbstractConnectionListener {
 
     @Listener(order = Order.FIRST)
     @IsCancelled(Tristate.UNDEFINED)
-    public void onClientLogin(ClientConnectionEvent.Login e) {
+    public void onClientLogin(ServerSideConnectionEvent.Login e) {
         /* Called when the player starts logging into the server.
            At this point, the users data should be present and loaded.
            Listening on LOW priority to allow plugins to further modify data here. (auth plugins, etc.) */
@@ -152,15 +147,13 @@ public class SpongeConnectionListener extends AbstractConnectionListener {
             }
 
             e.setCancelled(true);
-            e.setMessageCancelled(false);
-            Component reason = TranslationManager.render(Message.LOADING_STATE_ERROR.build());
-            e.setMessage(SpongeComponentSerializer.get().serialize(reason));
+            e.setMessage(TranslationManager.render(Message.LOADING_STATE_ERROR.build()));
         }
     }
 
     @Listener(order = Order.LAST)
     @IsCancelled(Tristate.UNDEFINED)
-    public void onClientLoginMonitor(ClientConnectionEvent.Login e) {
+    public void onClientLoginMonitor(ServerSideConnectionEvent.Login e) {
         /* Listen to see if the event was cancelled after we initially handled the login
            If the connection was cancelled here, we need to do something to clean up the data that was loaded. */
 
@@ -175,8 +168,8 @@ public class SpongeConnectionListener extends AbstractConnectionListener {
     }
 
     @Listener(order = Order.POST)
-    public void onClientLeave(ClientConnectionEvent.Disconnect e) {
-        handleDisconnect(e.getTargetEntity().getUniqueId());
+    public void onClientLeave(ServerSideConnectionEvent.Disconnect e) {
+        handleDisconnect(e.getPlayer().getUniqueId());
     }
 
 }

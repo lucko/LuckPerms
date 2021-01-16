@@ -23,29 +23,21 @@
  *  SOFTWARE.
  */
 
-package me.lucko.luckperms.sponge.listeners;
+package me.lucko.luckperms.sponge.service.model;
 
-import me.lucko.luckperms.common.locale.Message;
-import me.lucko.luckperms.sponge.LPSpongePlugin;
+import net.luckperms.api.query.QueryOptions;
 
-import org.spongepowered.api.command.CommandCause;
-import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.command.ExecuteCommandEvent;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.spongepowered.api.service.permission.Subject;
 
-public class SpongePlatformListener {
-    private final LPSpongePlugin plugin;
+/**
+ * Marks that an object is a proxied representation of a {@link Subject}.
+ */
+public interface LPProxiedSubject extends Subject, LPProxiedServiceObject {
 
-    public SpongePlatformListener(LPSpongePlugin plugin) {
-        this.plugin = plugin;
-    }
+    @Override
+    @NonNull LPSubjectReference asSubjectReference();
 
-    @Listener
-    public void onSendCommand(ExecuteCommandEvent e) {
-        CommandCause source = e.getCommandCause();
+    @NonNull QueryOptions getQueryOptions();
 
-        final String name = e.getCommand().toLowerCase();
-        if (((name.equals("op") || name.equals("minecraft:op")) && source.hasPermission("minecraft.command.op")) || ((name.equals("deop") || name.equals("minecraft:deop")) && source.hasPermission("minecraft.command.deop"))) {
-            Message.OP_DISABLED_SPONGE.send(this.plugin.getSenderFactory().wrap(source.getAudience()));
-        }
-    }
 }

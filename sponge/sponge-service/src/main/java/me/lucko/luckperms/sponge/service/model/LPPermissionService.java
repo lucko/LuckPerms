@@ -32,12 +32,13 @@ import me.lucko.luckperms.common.context.ContextManager;
 import me.lucko.luckperms.common.plugin.LuckPermsPlugin;
 import me.lucko.luckperms.sponge.service.reference.SubjectReferenceFactory;
 
-import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.plugin.PluginContainer;
+import net.kyori.adventure.text.Component;
+
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.service.context.ContextCalculator;
 import org.spongepowered.api.service.permission.PermissionService;
 import org.spongepowered.api.service.permission.Subject;
-import org.spongepowered.api.text.Text;
+import org.spongepowered.plugin.PluginContainer;
 
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -49,7 +50,7 @@ public interface LPPermissionService {
 
     LuckPermsPlugin getPlugin();
 
-    ContextManager<Subject, Player> getContextManager();
+    ContextManager<Subject, ServerPlayer> getContextManager();
 
     SubjectReferenceFactory getReferenceFactory();
 
@@ -69,13 +70,15 @@ public interface LPPermissionService {
 
     ImmutableMap<String, LPSubjectCollection> getLoadedCollections();
 
-    LPPermissionDescription registerPermissionDescription(String id, Text description, PluginContainer owner);
+    LPPermissionDescription registerPermissionDescription(String id, Component description, PluginContainer owner);
 
     Optional<LPPermissionDescription> getDescription(String permission);
 
     ImmutableCollection<LPPermissionDescription> getDescriptions();
 
     void registerContextCalculator(ContextCalculator<Subject> calculator);
+
+    void fireUpdateEvent(LPSubjectData subjectData);
 
     void invalidateAllCaches();
 }

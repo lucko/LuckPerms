@@ -1,5 +1,6 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'java'
 }
 
 repositories {
@@ -8,7 +9,7 @@ repositories {
 }
 
 dependencies {
-    compile project(':common')
+    implementation project(':common')
     compileOnly project(':common:loader-utils')
 
     compileOnly 'com.destroystokyo.paper:paper-api:1.15.2-R0.1-SNAPSHOT'
@@ -18,14 +19,14 @@ dependencies {
         exclude(module: 'adventure-nbt')
     }
     compileOnly 'me.lucko:commodore:1.9'
-    compileOnly('net.milkbowl.vault:VaultAPI:1.6') {
+    compileOnly('net.milkbowl.vault:VaultAPI:1.7') {
         exclude(module: 'bukkit')
     }
     compileOnly 'lilypad.client.connect:api:0.0.1-SNAPSHOT'
 }
 
 shadowJar {
-    archiveName = 'luckperms-bukkit.jarinjar'
+    archiveName 'luckperms-bukkit.jarinjar'
 
     dependencies {
         include(dependency('me.lucko.luckperms:.*'))

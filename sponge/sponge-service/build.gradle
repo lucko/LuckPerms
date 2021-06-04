@@ -3,7 +3,7 @@ repositories {
 }
 
 dependencies {
-    compile project(':common')
+    implementation project(':common')
 
     compileOnly('org.spongepowered:spongeapi:7.2.0') {
         exclude(module: 'configurate-core')

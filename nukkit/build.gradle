@@ -1,5 +1,5 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 repositories {
@@ -8,14 +8,14 @@ repositories {
 }
 
 dependencies {
-    compile project(':common')
+    implementation project(':common')
     compileOnly project(':common:loader-utils')
 
     compileOnly 'cn.nukkit:nukkit:1.0-SNAPSHOT'
 }
 
 shadowJar {
-    archiveName = 'luckperms-nukkit.jarinjar'
+    archiveName 'luckperms-nukkit.jarinjar'
 
     dependencies {
         include(dependency('me.lucko.luckperms:.*'))

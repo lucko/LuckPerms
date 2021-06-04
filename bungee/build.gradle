@@ -1,12 +1,12 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 dependencies {
-    compile project(':common')
+    implementation project(':common')
     compileOnly project(':common:loader-utils')
 
-    compileOnly 'net.md-5:bungeecord-api:1.15-SNAPSHOT'
+    compileOnly 'net.md-5:bungeecord-api:1.16-R0.4'
     compileOnly('me.lucko:adventure-platform-bungeecord:4.7.0') {
         exclude(module: 'adventure-bom')
         exclude(module: 'adventure-api')
@@ -16,7 +16,7 @@ dependencies {
 }
 
 shadowJar {
-    archiveName = 'luckperms-bungee.jarinjar'
+    archiveName 'luckperms-bungee.jarinjar'
 
     dependencies {
         include(dependency('me.lucko.luckperms:.*'))

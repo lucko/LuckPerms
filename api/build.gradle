@@ -50,56 +50,63 @@ if (project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePass
         sign configurations.archives
     }
 
-    uploadArchives {
+    publishing {
         repositories {
-            mavenDeployer {
-                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            maven {
+                def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+                def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+                url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
 
-                repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-                    authentication(userName: sonatypeUsername, password: sonatypePassword)
+                credentials {
+                    username sonatypeUsername
+                    password sonatypePassword
                 }
+            }
+        }
 
-                snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
-                    authentication(userName: sonatypeUsername, password: sonatypePassword)
-                }
+        publications {
+            mavenJava(MavenPublication) {
+                artifactId = 'api'
+
+                from components.java
+                artifact sourcesJar
+                artifact javadocJar
 
                 pom {
-                    project {
-                        name 'LuckPerms API'
-                        description 'A permissions plugin for Minecraft servers.'
-                        url 'https://luckperms.net'
+                    name 'LuckPerms API'
+                    description 'A permissions plugin for Minecraft servers.'
+                    url 'https://luckperms.net'
 
-                        licenses {
-                            license {
-                                name 'MIT'
-                                url 'https://opensource.org/licenses/MIT'
-                            }
+                    licenses {
+                        license {
+                            name 'MIT'
+                            url 'https://opensource.org/licenses/MIT'
                         }
+                    }
 
-                        developers {
-                            developer {
-                                id 'lucko'
-                                name 'Luck'
-                                url 'https://lucko.me'
-                                email 'git@lucko.me'
-                            }
+                    developers {
+                        developer {
+                            id 'lucko'
+                            name 'Luck'
+                            url 'https://lucko.me'
+                            email 'git@lucko.me'
                         }
+                    }
 
-                        scm {
-                            connection 'scm:git:https://github.com/lucko/LuckPerms.git'
-                            developerConnection 'scm:git:git@github.com:lucko/LuckPerms.git'
-                            url 'https://github.com/lucko/LuckPerms'
-                        }
+                    scm {
+                        connection 'scm:git:https://github.com/lucko/LuckPerms.git'
+                        developerConnection 'scm:git:git@github.com:lucko/LuckPerms.git'
+                        url 'https://github.com/lucko/LuckPerms'
+                    }
 
-                        ciManagement {
-                            system 'Jenkins'
-                            url 'https://ci.lucko.me/job/LuckPerms'
-                        }
+                    ciManagement {
+                        system 'Jenkins'
+                        url 'https://ci.lucko.me/job/LuckPerms'
+                    }
 
-                        issueManagement {
-                            system 'GitHub'
-                            url 'https://github.com/lucko/LuckPerms/issues'
-                        }
+                    issueManagement {
+                        system 'GitHub'
+                        url 'https://github.com/lucko/LuckPerms/issues'
                     }
                 }
             }

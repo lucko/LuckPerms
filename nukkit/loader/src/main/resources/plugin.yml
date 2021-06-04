@@ -1,5 +1,5 @@
 name: LuckPerms
-version: ${pluginVersion}
+version: @pluginVersion@
 api: ["1.0.5"]
 description: A permissions plugin
 author: Luck

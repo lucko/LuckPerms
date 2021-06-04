@@ -3,8 +3,8 @@ repositories {
 }
 
 dependencies {
-    compile project(':common')
-    compile project(':sponge:sponge-service')
+    implementation project(':common')
+    implementation project(':sponge:sponge-service')
 
     compileOnly('org.spongepowered:spongeapi:6.0.0') {
         exclude(module: 'configurate-core')

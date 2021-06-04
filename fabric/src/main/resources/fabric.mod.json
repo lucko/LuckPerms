@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "luckperms",
-  "version": "${version}",
+  "version": "@version@",
   "name": "LuckPerms",
   "icon": "assets/luckperms/icon.png",
   "description": "A permissions plugin (mod)",

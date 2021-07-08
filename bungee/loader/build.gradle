@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 plugins {
     id 'com.github.johnrengelman.shadow'
 }
@@ -5,19 +7,16 @@ plugins {
 dependencies {
     compileOnly 'net.md-5:bungeecord-api:1.15-SNAPSHOT'
 
-    compile project(':api')
-    compile project(':common:loader-utils')
+    implementation project(':api')
+    implementation project(':common:loader-utils')
 }
 
 processResources {
-    from(sourceSets.main.resources.srcDirs) {
-        expand 'pluginVersion': project.ext.fullVersion
-        include 'plugin.yml'
-    }
+    filter ReplaceTokens, tokens: ['pluginVersion': project.ext.fullVersion]
 }
 
 shadowJar {
-    archiveName = "LuckPerms-Bungee-${project.ext.fullVersion}.jar"
+    archiveName "LuckPerms-Bungee-${project.ext.fullVersion}.jar"
 
     from {
         project(':bungee').tasks.shadowJar.archiveFile

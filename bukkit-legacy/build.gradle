@@ -1,15 +1,15 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 dependencies {
-    compile project(':bukkit')
-    compile 'com.google.code.gson:gson:2.7'
-    compile 'com.google.guava:guava:19.0'
+    implementation project(':bukkit')
+    implementation 'com.google.code.gson:gson:2.7'
+    implementation 'com.google.guava:guava:19.0'
 }
 
 shadowJar {
-    archiveName = 'luckperms-bukkitlegacy.jarinjar'
+    archiveName 'luckperms-bukkitlegacy.jarinjar'
 
     dependencies {
         include(dependency('me.lucko.luckperms:.*'))

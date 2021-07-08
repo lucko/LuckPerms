@@ -1,3 +1,7 @@
+plugins {
+    id 'java-library'
+}
+
 test {
     useJUnitPlatform {
         excludeTags 'dependency_checksum'
@@ -5,69 +9,69 @@ test {
 }
 
 dependencies {
-    testCompile 'org.junit.jupiter:junit-jupiter-api:5.7.0'
-    testCompile 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 
-    compile project(':api')
-    compile 'org.checkerframework:checker-qual:3.12.0'
+    api project(':api')
+    api 'org.checkerframework:checker-qual:3.12.0'
 
     compileOnly project(':common:loader-utils')
 
     compileOnly 'org.slf4j:slf4j-api:1.7.30'
     compileOnly 'org.apache.logging.log4j:log4j-api:2.14.0'
 
-    compile('net.kyori:adventure-api:4.7.0') {
+    api('net.kyori:adventure-api:4.7.0') {
         exclude(module: 'adventure-bom')
         exclude(module: 'checker-qual')
         exclude(module: 'annotations')
     }
 
-    compile('net.kyori:adventure-text-serializer-gson:4.7.0') {
+    api('net.kyori:adventure-text-serializer-gson:4.7.0') {
         exclude(module: 'adventure-bom')
         exclude(module: 'adventure-api')
         exclude(module: 'gson')
     }
 
-    compile('net.kyori:adventure-text-serializer-legacy:4.7.0') {
+    api('net.kyori:adventure-text-serializer-legacy:4.7.0') {
         exclude(module: 'adventure-bom')
         exclude(module: 'adventure-api')
     }
 
-    compile('net.kyori:adventure-text-serializer-plain:4.7.0') {
+    api('net.kyori:adventure-text-serializer-plain:4.7.0') {
         exclude(module: 'adventure-bom')
         exclude(module: 'adventure-api')
     }
 
-    compile('net.kyori:event-api:3.0.0') {
+    api('net.kyori:event-api:3.0.0') {
         exclude(module: 'checker-qual')
         exclude(module: 'guava')
     }
 
-    compile 'com.google.code.gson:gson:2.7'
-    compile 'com.google.guava:guava:19.0'
+    api 'com.google.code.gson:gson:2.7'
+    api 'com.google.guava:guava:19.0'
 
-    compile 'com.github.ben-manes.caffeine:caffeine:2.9.0'
-    compile 'com.squareup.okhttp3:okhttp:3.14.9'
-    compile 'com.squareup.okio:okio:1.17.5'
-    compile 'net.bytebuddy:byte-buddy:1.10.22'
-    compile('org.spongepowered:configurate-core:3.7.2') {
+    api 'com.github.ben-manes.caffeine:caffeine:2.9.0'
+    api 'com.squareup.okhttp3:okhttp:3.14.9'
+    api 'com.squareup.okio:okio:1.17.5'
+    api 'net.bytebuddy:byte-buddy:1.10.22'
+    api('org.spongepowered:configurate-core:3.7.2') {
         transitive = false
     }
-    compile('org.spongepowered:configurate-yaml:3.7.2') {
+    api('org.spongepowered:configurate-yaml:3.7.2') {
         transitive = false
     }
-    compile('org.spongepowered:configurate-gson:3.7.2') {
+    api('org.spongepowered:configurate-gson:3.7.2') {
         transitive = false
     }
-    compile ('org.spongepowered:configurate-hocon:3.7.2') {
+    api('org.spongepowered:configurate-hocon:3.7.2') {
         transitive = false
     }
-    compile('me.lucko.configurate:configurate-toml:3.7') {
+    api('me.lucko.configurate:configurate-toml:3.7') {
         transitive = false
     }
-    compile 'com.zaxxer:HikariCP:4.0.3'
-    compile 'redis.clients:jedis:3.5.2'
-    compile 'com.rabbitmq:amqp-client:5.12.0'
-    compile 'org.mongodb:mongo-java-driver:3.12.8'
-    compile 'org.yaml:snakeyaml:1.28'
+    api 'com.zaxxer:HikariCP:4.0.3'
+    api 'redis.clients:jedis:3.5.2'
+    api 'com.rabbitmq:amqp-client:5.12.0'
+    api 'org.mongodb:mongo-java-driver:3.12.8'
+    api 'org.yaml:snakeyaml:1.28'
 }

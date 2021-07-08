@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 plugins {
     id 'com.github.johnrengelman.shadow'
 }
@@ -9,19 +11,16 @@ repositories {
 dependencies {
     compileOnly 'com.destroystokyo.paper:paper-api:1.15.2-R0.1-SNAPSHOT'
 
-    compile project(':api')
-    compile project(':common:loader-utils')
+    implementation project(':api')
+    implementation project(':common:loader-utils')
 }
 
 processResources {
-    from(sourceSets.main.resources.srcDirs) {
-        expand 'pluginVersion': project.ext.fullVersion
-        include 'plugin.yml'
-    }
+    filter ReplaceTokens, tokens: ['pluginVersion': project.ext.fullVersion]
 }
 
 shadowJar {
-    archiveName = "LuckPerms-Bukkit-Legacy-${project.ext.fullVersion}.jar"
+    archiveName "LuckPerms-Bukkit-Legacy-${project.ext.fullVersion}.jar"
 
     from {
         project(':bukkit-legacy').tasks.shadowJar.archiveFile

@@ -55,6 +55,10 @@ import net.luckperms.api.query.QueryMode;
 import net.luckperms.api.query.QueryOptions;
 import net.luckperms.api.query.meta.MetaValueSelector;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -540,12 +544,28 @@ public final class ConfigKeys {
         int keepAliveTime = c.getInteger("data.pool-settings.keepalive-time", 0);
         int connectionTimeout = c.getInteger("data.pool-settings.connection-timeout", 5000);
         Map<String, String> props = ImmutableMap.copyOf(c.getStringMap("data.pool-settings.properties", ImmutableMap.of()));
+        // Load a fallback password, in case there is no file path or loading the file causes an error
+        String password = c.getString("data.password", null);
+        String passwordFilePath = c.getString("data.password-file", null);
+
+        if (passwordFilePath != null && !passwordFilePath.equals("")) {
+            try {
+                Charset encoding = Charset.defaultCharset();
+                byte[] passwordBytes = Files.readAllBytes(Paths.get(passwordFilePath));
+                // Database passwords probably do not intend to have newlines, but when editing files in most editors
+                // (e.g., vi(m), VS Code, etc) a new line will automatically be added for POSIX compatibility.
+                // This takes that into consideration
+                password = new String(passwordBytes, encoding).trim();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        }
 
         return new StorageCredentials(
                 c.getString("data.address", null),
                 c.getString("data.database", null),
                 c.getString("data.username", null),
-                c.getString("data.password", null),
+                password,
                 maxPoolSize, minIdle, maxLifetime, keepAliveTime, connectionTimeout, props
         );
     }));

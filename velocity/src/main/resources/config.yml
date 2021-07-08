@@ -95,6 +95,10 @@ data:
   username: root
   password: ''
 
+  # Optional. If the file path points to a file that can be loaded, use the text from
+  # the file as the password for the database instead of the password above
+  password-file: ''
+
   # These settings apply to the MySQL connection pool.
   # - The default values will be suitable for the majority of users.
   # - Do not change these settings unless you know what you're doing!

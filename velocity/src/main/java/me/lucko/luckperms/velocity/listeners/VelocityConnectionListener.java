@@ -25,6 +25,7 @@
 
 package me.lucko.luckperms.velocity.listeners;
 
+import com.velocitypowered.api.event.Continuation;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
@@ -58,7 +59,7 @@ public class VelocityConnectionListener extends AbstractConnectionListener {
     }
 
     @Subscribe
-    public void onPlayerPermissionsSetup(PermissionsSetupEvent e) {
+    public void onPlayerPermissionsSetup(PermissionsSetupEvent e, Continuation continuation) {
         /* Called when the player first attempts a connection with the server.
            The PermissionsSetupEvent is called for players just before the Login event
 
@@ -76,30 +77,34 @@ public class VelocityConnectionListener extends AbstractConnectionListener {
             this.plugin.getLogger().info("Processing pre-login for " + p.getUniqueId() + " - " + p.getUsername());
         }
 
-        /* Actually process the login for the connection.
-           We do this here to delay the login until the data is ready.
-           If the login gets cancelled later on, then this will be cleaned up.
+        this.plugin.getBootstrap().getScheduler().executeAsync(() -> {
+            /* Actually process the login for the connection.
+               We do this here to delay the login until the data is ready.
+               If the login gets cancelled later on, then this will be cleaned up.
 
-           This includes:
-           - loading uuid data
-           - loading permissions
-           - creating a user instance in the UserManager for this connection.
-           - setting up cached data. */
-        try {
-            User user = loadUser(p.getUniqueId(), p.getUsername());
-            recordConnection(p.getUniqueId());
-            e.setProvider(new PlayerPermissionProvider(p, user, this.plugin.getContextManager().getCacheFor(p)));
-            this.plugin.getEventDispatcher().dispatchPlayerLoginProcess(p.getUniqueId(), p.getUsername(), user);
-        } catch (Exception ex) {
-            this.plugin.getLogger().severe("Exception occurred whilst loading data for " + p.getUniqueId() + " - " + p.getUsername(), ex);
+               This includes:
+               - loading uuid data
+               - loading permissions
+               - creating a user instance in the UserManager for this connection.
+               - setting up cached data. */
+            try {
+                User user = loadUser(p.getUniqueId(), p.getUsername());
+                recordConnection(p.getUniqueId());
+                e.setProvider(new PlayerPermissionProvider(p, user, this.plugin.getContextManager().getCacheFor(p)));
+                this.plugin.getEventDispatcher().dispatchPlayerLoginProcess(p.getUniqueId(), p.getUsername(), user);
+            } catch (Exception ex) {
+                this.plugin.getLogger().severe("Exception occurred whilst loading data for " + p.getUniqueId() + " - " + p.getUsername(), ex);
 
-            // there was some error loading
-            if (this.plugin.getConfiguration().get(ConfigKeys.CANCEL_FAILED_LOGINS)) {
-                // cancel the login attempt
-                this.deniedLogin.add(p.getUniqueId());
+                // there was some error loading
+                if (this.plugin.getConfiguration().get(ConfigKeys.CANCEL_FAILED_LOGINS)) {
+                    // cancel the login attempt
+                    this.deniedLogin.add(p.getUniqueId());
+                }
+                this.plugin.getEventDispatcher().dispatchPlayerLoginProcess(p.getUniqueId(), p.getUsername(), null);
+            } finally {
+                continuation.resume();
             }
-            this.plugin.getEventDispatcher().dispatchPlayerLoginProcess(p.getUniqueId(), p.getUsername(), null);
-        }
+        });
     }
 
     @Subscribe(order = PostOrder.FIRST)

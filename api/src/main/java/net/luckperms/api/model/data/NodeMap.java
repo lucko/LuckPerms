@@ -110,6 +110,25 @@ public interface NodeMap {
     DataMutateResult.@NonNull WithMergedNode add(@NonNull Node node, @NonNull TemporaryNodeMergeStrategy temporaryNodeMergeStrategy);
 
     /**
+     * Adds a collection of nodes.
+     *
+     * @param nodes the collection of nodes to add
+     * @since 5.4
+     */
+    void addAll(@NonNull Iterable<? extends Node> nodes);
+
+    /**
+     * Adds the nodes from another node map.
+     *
+     * <p>Effectively calls {@link #addAll(Iterable)} with the result from
+     * {@link #toCollection()}.</p>
+     *
+     * @param nodeMap the node map to merge into this one
+     * @since 5.4
+     */
+    void addAll(@NonNull NodeMap nodeMap);
+
+    /**
      * Removes a node.
      *
      * @param node the node to remove

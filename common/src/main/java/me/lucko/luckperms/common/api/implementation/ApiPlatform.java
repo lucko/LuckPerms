@@ -32,6 +32,7 @@ import net.luckperms.api.platform.PluginMetadata;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
@@ -54,6 +55,11 @@ public class ApiPlatform implements Platform, PluginMetadata {
     public @NonNull String getApiVersion() {
         String[] version = this.plugin.getBootstrap().getVersion().split("\\.");
         return version[0] + '.' + version[1];
+    }
+
+    @Override
+    public @NonNull Path getConfigDirectory() {
+        return this.plugin.getBootstrap().getConfigDirectory();
     }
 
     @Override

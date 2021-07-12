@@ -29,11 +29,15 @@ import me.lucko.luckperms.common.bulkupdate.PreparedStatementBuilder;
 import me.lucko.luckperms.common.bulkupdate.query.QueryField;
 import me.lucko.luckperms.common.node.factory.NodeBuilders;
 
+import net.luckperms.api.bulkupdate.action.UpdatingAction;
 import net.luckperms.api.context.DefaultContextKeys;
 import net.luckperms.api.context.MutableContextSet;
 import net.luckperms.api.node.Node;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class UpdateAction implements Action {
+import java.util.Optional;
+
+public class UpdateAction implements Action, UpdatingAction {
 
     public static UpdateAction of(QueryField field, String value) {
         return new UpdateAction(field, value);
@@ -51,19 +55,19 @@ public class UpdateAction implements Action {
     }
 
     @Override
-    public String getName() {
+    public @NonNull String getName() {
         return "update";
     }
 
     @Override
-    public Node apply(Node from) {
+    public @NonNull Optional<Node> apply(@NonNull Node from) {
         switch (this.field) {
             case PERMISSION:
-                return NodeBuilders.determineMostApplicable(this.value)
-                        .value(from.getValue())
-                        .expiry(from.getExpiry())
-                        .context(from.getContexts())
-                        .build();
+                return Optional.of(NodeBuilders.determineMostApplicable(this.value)
+                                    .value(from.getValue())
+                                    .expiry(from.getExpiry())
+                                    .context(from.getContexts())
+                                    .build());
             case SERVER: {
                 MutableContextSet contexts = from.getContexts().mutableCopy();
                 contexts.removeAll(DefaultContextKeys.SERVER_KEY);
@@ -71,9 +75,9 @@ public class UpdateAction implements Action {
                     contexts.add(DefaultContextKeys.SERVER_KEY, this.value);
                 }
 
-                return from.toBuilder()
-                        .context(contexts)
-                        .build();
+                return Optional.of(from.toBuilder()
+                                    .context(contexts)
+                                    .build());
             }
             case WORLD: {
                 MutableContextSet contexts = from.getContexts().mutableCopy();
@@ -82,9 +86,9 @@ public class UpdateAction implements Action {
                     contexts.add(DefaultContextKeys.WORLD_KEY, this.value);
                 }
 
-                return from.toBuilder()
-                        .context(contexts)
-                        .build();
+                return Optional.of(from.toBuilder()
+                                    .context(contexts)
+                                    .build());
             }
             default:
                 throw new RuntimeException();

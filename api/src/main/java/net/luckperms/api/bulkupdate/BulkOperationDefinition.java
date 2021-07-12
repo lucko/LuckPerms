@@ -23,42 +23,23 @@
  *  SOFTWARE.
  */
 
-package me.lucko.luckperms.common.bulkupdate.action;
+package net.luckperms.api.bulkupdate;
 
-import me.lucko.luckperms.common.bulkupdate.PreparedStatementBuilder;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.bulkupdate.action.Action;
 
-import net.luckperms.api.node.Node;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import java.util.Optional;
+public interface BulkOperationDefinition {
 
-/**
- * Represents an action to be applied to a given node.
- */
-public interface Action extends net.luckperms.api.bulkupdate.action.Action {
+    static Builder builder() {
+        return LuckPermsProvider.get().getBulkUpdateFactory().builder();
+    }
 
-    /**
-     * Gets the name of this action
-     *
-     * @return the name of the action
-     */
-    @NonNull String getName();
+    @NonNull Action action();
 
-    /**
-     * Applies this action to the given NodeModel, and returns the result.
-     *
-     * @param from the node to base changes from
-     * @return the new nodemodel instance, or null if the node should be deleted.
-     */
-    @NonNull Optional<Node> apply(@NonNull Node from);
+    interface Builder {
 
-    /**
-     * Gets this action in SQL form.
-     *
-     * Will include a placeholder for the table, as "{table}".
-     *
-     * @param builder the statement builder
-     */
-    void appendSql(PreparedStatementBuilder builder);
-
+        @NonNull BulkOperationDefinition build();
+    }
 }

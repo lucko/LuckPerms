@@ -90,7 +90,7 @@ public final class BulkUpdate {
             return node; // make no change
         }
 
-        Node result = this.action.apply(node);
+        Node result = this.action.apply(node).orElse(null);
 
         if (this.trackStatistics && result != node) {
             this.statistics.incrementAffectedNodes();

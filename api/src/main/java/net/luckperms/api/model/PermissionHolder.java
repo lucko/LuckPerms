@@ -300,6 +300,26 @@ public interface PermissionHolder {
     @NonNull @Unmodifiable Collection<Group> getInheritedGroups(@NonNull QueryOptions queryOptions);
 
     /**
+     * Gets a collection of the {@link Group}s this holder inherits nodes from.
+     *
+     * <p>This method exists to avoid the verbosity of converting an existing {@link QueryOptions}
+     * to its builder form and back solely to change the {@link Flag#RESOLVE_INHERITANCE} flag.</p>
+     *
+     * <p>This calls {@link #getInheritedGroups(QueryOptions)} with the modified query options.
+     * See the description for it for the specific behavior of this method.</p>
+     *
+     * @param queryOptions       the query options
+     * @param resolveInheritance whether the resulting collection should include inherited groups
+     *                           beyond the holder's direct parent groups
+     * @return a collection of the groups the holder inherits from
+     * @since 5.4
+     * @see #getInheritedGroups(QueryOptions)
+     */
+    default @NonNull @Unmodifiable Collection<Group> getInheritedGroups(@NonNull QueryOptions queryOptions, boolean resolveInheritance) {
+        return getInheritedGroups(queryOptions.toBuilder().flag(Flag.RESOLVE_INHERITANCE, resolveInheritance).build());
+    }
+
+    /**
      * Removes any temporary permissions that have expired.
      *
      * <p>This method is called periodically by the platform, so it is only necessary to run

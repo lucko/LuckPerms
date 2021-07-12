@@ -241,9 +241,13 @@ public abstract class PermissionHolder {
         return res;
     }
 
-    public void mergeNodes(DataType type, Iterable<? extends Node> set) {
-        getData(type).addAll(set);
+    public MutateResult mergeNodes(DataType type, Iterable<? extends Node> set, boolean callEvent) {
+        MutateResult result = getData(type).addAll(set);
         invalidateCache();
+        if (callEvent && !result.isEmpty()) {
+            getPlugin().getEventDispatcher().dispatchNodeChanges(this, type, result);
+        }
+        return result;
     }
 
     private DataType[] queryOrder(QueryOptions queryOptions) {

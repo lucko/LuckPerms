@@ -23,42 +23,35 @@
  *  SOFTWARE.
  */
 
-package me.lucko.luckperms.common.bulkupdate.action;
-
-import me.lucko.luckperms.common.bulkupdate.PreparedStatementBuilder;
+package net.luckperms.api.bulkupdate.action;
 
 import net.luckperms.api.node.Node;
+
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.Optional;
 
 /**
- * Represents an action to be applied to a given node.
+ *
  */
-public interface Action extends net.luckperms.api.bulkupdate.action.Action {
+public interface DeletingAction extends Action {
+
+    @Override
+    default @NonNull Type getType() {
+        return Type.DELETE;
+    }
 
     /**
-     * Gets the name of this action
+     * Applies the.
      *
-     * @return the name of the action
+     * <p>A deleting action results in the node being removed, therefore this method returns
+     * an empty value. </p>
+     *
+     * @param node the node to process.
+     * @return an optional, always empty.
      */
-    @NonNull String getName();
-
-    /**
-     * Applies this action to the given NodeModel, and returns the result.
-     *
-     * @param from the node to base changes from
-     * @return the new nodemodel instance, or null if the node should be deleted.
-     */
-    @NonNull Optional<Node> apply(@NonNull Node from);
-
-    /**
-     * Gets this action in SQL form.
-     *
-     * Will include a placeholder for the table, as "{table}".
-     *
-     * @param builder the statement builder
-     */
-    void appendSql(PreparedStatementBuilder builder);
-
+    @Override
+    default @NonNull Optional<Node> apply(@NonNull Node node) {
+        return Optional.empty();
+    }
 }

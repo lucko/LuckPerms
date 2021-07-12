@@ -98,7 +98,7 @@ public class Importer implements Runnable {
     private void processGroup(String groupName, Set<Node> nodes) {
         Group group = this.plugin.getStorage().createAndLoadGroup(groupName, CreationCause.INTERNAL).join();
         if (this.merge) {
-            group.mergeNodes(DataType.NORMAL, nodes);
+            group.mergeNodes(DataType.NORMAL, nodes, false);
         } else {
             group.setNodes(DataType.NORMAL, nodes, false);
         }
@@ -117,7 +117,7 @@ public class Importer implements Runnable {
             user.getPrimaryGroup().setStoredValue(userData.primaryGroup);
         }
         if (this.merge) {
-            user.mergeNodes(DataType.NORMAL, userData.nodes);
+            user.mergeNodes(DataType.NORMAL, userData.nodes, false);
         } else {
             user.setNodes(DataType.NORMAL, userData.nodes, false);
         }

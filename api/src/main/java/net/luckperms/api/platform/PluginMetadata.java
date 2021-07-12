@@ -27,6 +27,8 @@ package net.luckperms.api.platform;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import java.nio.file.Path;
+
 /**
  * Provides information about the LuckPerms plugin.
  */
@@ -45,5 +47,12 @@ public interface PluginMetadata {
      * @return the version of the API running on the platform
      */
     @NonNull String getApiVersion();
+
+    /**
+     * Gets the config directory path
+     *
+     * @return the directory path in where the plugin stores various configuration files
+     */
+    @NonNull Path getConfigDirectory();
 
 }
